@@ -1,0 +1,34 @@
+FROM apache/airflow:3.1.8
+
+USER root
+
+ENV TERRAFORM_VERSION=1.9.8
+
+# Install Terraform CLI binary.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl unzip \
+  && curl -fsSL "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" -o /tmp/terraform.zip \
+  && unzip /tmp/terraform.zip -d /usr/local/bin \
+  && rm -f /tmp/terraform.zip \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install uv into the image (provides the `uv` binary).
+RUN python -m pip install --no-cache-dir --upgrade pip \
+  && python -m pip install --no-cache-dir uv
+
+# Create a project venv location and ensure it is writable.
+ENV UV_PROJECT_ENVIRONMENT=/opt/airflow/.venv
+ENV PATH="/opt/airflow/.venv/bin:${PATH}"
+
+WORKDIR /opt/airflow
+
+# Copy only dependency manifests first for better Docker layer caching.
+COPY pyproject.toml uv.lock ./
+
+# Sync dependencies into the venv.
+# (No project package is installed since this repo doesn't define a build package yet.)
+RUN uv sync --frozen
+
+USER airflow
+

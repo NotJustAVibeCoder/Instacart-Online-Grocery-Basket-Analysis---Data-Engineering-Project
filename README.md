@@ -1,2 +1,48 @@
 # Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project
 This project is the capstone submission for the DataTalksClub Data Engineering Zoomcamp. The goal is to apply everything learned in the course to build a fully reproducible, end-to-end ELT data pipeline using the Instacart Online Grocery Basket Analysis dataset from Kaggle. 
+
+## Reproduction Steps
+
+### 1) Clone repository
+
+```bash
+git clone https://github.com/<your-org-or-username>/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project.git
+cd Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project
+```
+
+### 2) Configure Airflow environment variables
+
+Create `.env.airflow` in the project root:
+
+```env
+DATA_DIR=/opt/airflow/data
+KAGGLE_USERNAME=<your_kaggle_username>
+KAGGLE_KEY=<your_kaggle_api_key>
+```
+
+Notes:
+- `DATA_DIR` points to the mounted folder inside the Airflow container.
+- `KAGGLE_USERNAME` and `KAGGLE_KEY` are required by `kagglehub` in `pipelines/download_datasets.py`.
+
+### 3) Build and start Airflow with Docker Compose
+
+```bash
+ENV_FILE_PATH=.env.airflow docker compose up --build -d
+```
+
+Airflow UI will be available at [http://localhost:8080](http://localhost:8080).
+
+### 4) Run the DAG
+
+1. Open Airflow UI.
+2. Find DAG: `instacart_download_datasets`.
+3. Enable the DAG toggle.
+4. Click **Trigger DAG**.
+
+This runs `dags/instacart_dag.py`, which executes:
+
+`python /opt/airflow/pipelines/download_datasets.py`
+
+### 5) Verify downloaded data
+
+After the DAG run succeeds, dataset files should be present in your local `data/` folder (mounted to `/opt/airflow/data` in the container).
