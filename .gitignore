@@ -39,6 +39,7 @@ terraform.rc
 
 # Data
 data/
+logs/
 
 # Credentials
 credentials/
