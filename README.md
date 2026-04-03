@@ -28,7 +28,7 @@ bucket_name                    = "your-unique-gcs-bucket-name"
 bigquery_dataset_id            = "instacart_warehouse_dev"
 bigquery_dataset_friendly_name = "instacart-warehouse"
 bigquery_dataset_description   = "Instacart analytics warehouse dataset"
-bigquery_location              = "EU"
+bigquery_location              = "europe-west2"
 ```
 
 `iac/terraform.tfvars` is ignored by Git, so you can keep your real project-specific values there safely.

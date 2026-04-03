@@ -15,7 +15,7 @@ provider "google" {
 resource "google_storage_bucket" "instacart-bucket" {
   name          = var.bucket_name
   location      = var.region
-  force_destroy = true
+  force_destroy = false
 
   lifecycle_rule {
     condition {
@@ -32,5 +32,5 @@ resource "google_bigquery_dataset" "instacart_warehouse" {
   friendly_name              = var.bigquery_dataset_friendly_name
   description                = var.bigquery_dataset_description
   location                   = var.bigquery_location
-  delete_contents_on_destroy = true
+  delete_contents_on_destroy = false
 }
