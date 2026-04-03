@@ -1,0 +1,16 @@
+name: instacart-analytics
+version: '1.0'
+config-version: 2
+
+profile: my-bigquery-db
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+analysis-paths: ["analyses"]
+
+models:
+  instacart-analytics:
+    +materialized: view

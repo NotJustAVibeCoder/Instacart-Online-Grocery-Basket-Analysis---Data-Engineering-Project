@@ -1,7 +1,10 @@
 {
-    "workbench.editorAssociations": {
-        "*.parquet": "duckdb.dataFileViewer",
-        "*.csv": "duckdb.dataFileViewer",
-        "*.tsv": "duckdb.dataFileViewer"
-    }
+  "workbench.editorAssociations": {
+    "*.parquet": "duckdb.dataFileViewer",
+    "*.csv": "duckdb.dataFileViewer",
+    "*.tsv": "duckdb.dataFileViewer"
+  },
+  "[yaml]": {
+    "editor.formatOnSave": false
+  }
 }
