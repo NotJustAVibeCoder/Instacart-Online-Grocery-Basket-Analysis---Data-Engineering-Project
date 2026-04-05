@@ -1,4 +1,4 @@
-name: instacart-analytics
+name: instacart_analytics
 version: '1.0'
 config-version: 2
 
@@ -12,5 +12,5 @@ snapshot-paths: ["snapshots"]
 analysis-paths: ["analyses"]
 
 models:
-  instacart-analytics:
+  instacart_analytics:
     +materialized: view
