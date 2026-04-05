@@ -33,7 +33,35 @@ bigquery_location              = "europe-west2"
 
 `iac/terraform.tfvars` is ignored by Git, so you can keep your real project-specific values there safely.
 
-### 3) Provision infrastructure with Terraform
+### 3) Configure local environment variables
+
+This project uses `direnv` so project variables are loaded into your shell automatically when you enter the repository.
+
+1. Install `direnv` and hook it into your shell.
+2. Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+3. Fill in your real values in `.env`.
+4. Approve the repo once:
+
+```bash
+direnv allow
+```
+
+After that, each new shell session in this project will automatically load the values from `.env`.
+
+Local defaults provided by `.envrc`:
+- `DATA_DIR` -> `<repo>/data`
+- `IAC_DIR` -> `<repo>/iac`
+- `DBT_PROFILES_DIR` -> `<repo>/analytics`
+- `AIRFLOW_UID` -> your local user id
+
+If you need machine-specific overrides, create `.env.local`. It is also loaded automatically and is ignored by Git.
+
+### 4) Provision infrastructure with Terraform
 
 Run Terraform from the `iac/` directory:
 
@@ -53,9 +81,15 @@ You can inspect the provisioned values with:
 terraform -chdir=iac output
 ```
 
-### 4) Configure Airflow environment variables
+### 5) Configure Airflow environment variables
 
-Create `.env.airflow` in the project root:
+Copy the example Airflow env file:
+
+```bash
+cp .env.airflow.example .env.airflow
+```
+
+Then update it with your container-specific values:
 
 ```env
 DATA_DIR=/opt/airflow/data
@@ -66,16 +100,17 @@ KAGGLE_KEY=<your_kaggle_api_key>
 Notes:
 - `DATA_DIR` points to the mounted folder inside the Airflow container.
 - `KAGGLE_USERNAME` and `KAGGLE_KEY` are required by `kagglehub` in `pipelines/download_datasets.py`.
+- `.env.airflow` is for Docker Compose containers. `.env` is for your local shell session.
 
-### 5) Build and start Airflow with Docker Compose
+### 6) Build and start Airflow with Docker Compose
 
 ```bash
-ENV_FILE_PATH=.env.airflow docker compose up --build -d
+docker compose up --build -d
 ```
 
 Airflow UI will be available at [http://localhost:8080](http://localhost:8080).
 
-### 6) Run the DAG
+### 7) Run the DAG
 
 1. Open Airflow UI.
 2. Find DAG: `instacart_download_datasets`.
@@ -86,6 +121,6 @@ This runs `dags/instacart_dag.py`, which executes:
 
 `python /opt/airflow/pipelines/download_datasets.py`
 
-### 7) Verify downloaded data
+### 8) Verify downloaded data
 
 After the DAG run succeeds, dataset files should be present in your local `data/` folder (mounted to `/opt/airflow/data` in the container).

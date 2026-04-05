@@ -106,7 +106,8 @@ ipython_config.py
 
 # Environments
 .env
-.envrc
+.env.local
+.env.airflow
 .venv
 env/
 venv/
