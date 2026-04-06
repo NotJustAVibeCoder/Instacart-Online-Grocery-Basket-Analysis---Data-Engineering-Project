@@ -1,0 +1,81 @@
+version: 2
+
+sources:
+  - name: instacart_raw
+    description: Raw Instacart source tables loaded into BigQuery.
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: "{{ env_var('DBT_DATASET_NAME') }}"
+    loader: gcs
+
+    tables:
+      - name: aisles_external
+        description: Lookup table for aisle names.
+        columns:
+          - name: aisle_id
+            description: Primary key for the aisle.
+            tests:
+              - not_null
+              - unique
+          - name: aisle
+            description: Human-readable aisle name.
+
+      - name: departments_external
+        description: Lookup table for department names.
+        columns:
+          - name: department_id
+            description: Primary key for the department.
+            tests:
+              - not_null
+              - unique
+          - name: department
+            description: Human-readable department name.
+
+      - name: orders_external
+        description: Order-level facts for each Instacart order.
+        columns:
+          - name: order_id
+            description: Primary key for the order.
+            tests:
+              - not_null
+              - unique
+          - name: user_id
+            description: Instacart user identifier.
+          - name: order_number
+            description: Sequence number of the order for the user.
+          - name: order_dow
+            description: Day of week the order was placed.
+          - name: order_hour_of_day
+            description: Hour of day the order was placed.
+          - name: days_since_prior_order
+            description: Days since the user's prior order.
+
+      - name: order_products__prior_external
+        description: Line items for prior orders.
+        columns:
+          - name: order_id
+            description: Parent order identifier.
+            tests:
+              - not_null
+          - name: product_id
+            description: Referenced product identifier.
+            tests:
+              - not_null
+          - name: add_to_cart_order
+            description: Sequence in which the product was added to cart.
+          - name: reordered
+            description: Flag indicating whether the product was reordered.
+
+      - name: products_external
+        description: Product dimension table.
+        columns:
+          - name: product_id
+            description: Primary key for the product.
+            tests:
+              - not_null
+              - unique
+          - name: product_name
+            description: Human-readable product name.
+          - name: aisle_id
+            description: Referenced aisle identifier.
+          - name: department_id
+            description: Referenced department identifier.

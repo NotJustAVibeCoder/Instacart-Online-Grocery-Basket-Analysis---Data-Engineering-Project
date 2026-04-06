@@ -1,1 +1,4 @@
-select aisle_id, aisle from {{ source('instacart_raw', 'aisles') }}
+select
+  aisle_id,
+  aisle
+from {{ source('instacart_raw', 'aisles_external') }}
