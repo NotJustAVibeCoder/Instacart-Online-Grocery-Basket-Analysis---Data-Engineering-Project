@@ -1,1 +1,0 @@
-select aisle_id, aisle from `instacart-basket-analysis`.`instacart_warehouse0371`.`aisles_external`

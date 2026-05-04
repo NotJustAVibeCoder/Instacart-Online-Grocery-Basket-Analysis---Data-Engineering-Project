@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: int_product_info
+    description: Product dimension enriched with aisle and department labels.
+    columns:
+      - name: product_id
+        tests:
+          - not_null
+          - unique
+      - name: product_name
+        tests:
+          - not_null
+      - name: aisle
+        tests:
+          - not_null
+      - name: department
+        tests:
+          - not_null
+
+  - name: int_prior_order_details
+    description: Prior order lines enriched with user, order, and product attributes.
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: user_id
+        tests:
+          - not_null
+      - name: product_id
+        tests:
+          - not_null
+      - name: product_name
+        tests:
+          - not_null
+      - name: aisle
+        tests:
+          - not_null
+      - name: department
+        tests:
+          - not_null
+      - name: reordered
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+
+  - name: int_user_order_summary
+    description: Per-user order summary derived from staged orders.
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+          - unique
+      - name: total_orders
+        tests:
+          - not_null
+      - name: latest_order_number
+        tests:
+          - not_null

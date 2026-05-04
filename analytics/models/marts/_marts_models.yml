@@ -1,0 +1,83 @@
+version: 2
+
+models:
+  - name: dim_products
+    description: Reporting dimension for Instacart products.
+    columns:
+      - name: product_id
+        tests:
+          - not_null
+          - unique
+      - name: product_name
+        tests:
+          - not_null
+      - name: aisle
+        tests:
+          - not_null
+      - name: department
+        tests:
+          - not_null
+
+  - name: fct_prior_order_lines
+    description: Reporting fact table for prior order product lines.
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+      - name: user_id
+        tests:
+          - not_null
+      - name: product_id
+        tests:
+          - not_null
+      - name: add_to_cart_order
+        tests:
+          - not_null
+      - name: reordered
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+
+  - name: rpt_department_summary
+    description: Department-level metrics for Looker Studio reporting.
+    columns:
+      - name: department_id
+        tests:
+          - not_null
+          - unique
+      - name: department
+        tests:
+          - not_null
+      - name: line_items
+        tests:
+          - not_null
+
+  - name: rpt_aisle_summary
+    description: Aisle-level metrics for Looker Studio reporting.
+    columns:
+      - name: aisle_id
+        tests:
+          - not_null
+          - unique
+      - name: aisle
+        tests:
+          - not_null
+      - name: department
+        tests:
+          - not_null
+
+  - name: rpt_user_order_summary
+    description: User-level order behavior metrics for Looker Studio reporting.
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+          - unique
+      - name: total_orders
+        tests:
+          - not_null
+      - name: prior_line_items
+        tests:
+          - not_null
