@@ -28,7 +28,7 @@ COPY pyproject.toml uv.lock ./
 
 # Sync dependencies into the venv.
 # (No project package is installed since this repo doesn't define a build package yet.)
-RUN uv sync --frozen
+RUN uv sync --frozen \
+  && dbt --version
 
 USER airflow
-

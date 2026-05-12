@@ -3,9 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 
 import os
+import shlex
 
 from airflow import DAG
-from airflow.operators.bash import BashOperator
+from airflow.providers.standard.operators.bash import BashOperator
 
 
 # This DAG runs the dataset download pipeline script.
@@ -21,6 +22,8 @@ with DAG(
     tags=["instacart", "kaggle", "data"],
 ) as dag:
     iac_dir = os.getenv("IAC_DIR", "/opt/airflow/iac")
+    dbt_project_dir = os.getenv("DBT_PROJECT_DIR", "/opt/airflow/analytics")
+    dbt_profiles_dir = os.getenv("DBT_PROFILES_DIR", dbt_project_dir)
 
     download_datasets = BashOperator(
         task_id="download_datasets",
@@ -46,5 +49,19 @@ with DAG(
         bash_command="python /opt/airflow/pipelines/create_external_tables.py",
     )
 
-    download_datasets >> terraform_apply >> upload_data_to_gcs >> create_external_tables
+    run_dbt_models = BashOperator(
+        task_id="BigQuery_run_dbt_models",
+        bash_command=(
+            "set -euo pipefail\n"
+            'export PATH="/opt/airflow/.venv/bin:${PATH}"\n'
+            'test -f "${GOOGLE_APPLICATION_CREDENTIALS:?GOOGLE_APPLICATION_CREDENTIALS must be set}"\n'
+            "command -v dbt\n"
+            "dbt run "
+            f"--project-dir {shlex.quote(dbt_project_dir)} "
+            f"--profiles-dir {shlex.quote(dbt_profiles_dir)} "
+            "--target dev"
+        ),
+        append_env=True,
+    )
 
+    download_datasets >> terraform_apply >> upload_data_to_gcs >> create_external_tables >> run_dbt_models

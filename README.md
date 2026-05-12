@@ -2,6 +2,12 @@
 
 This project is an end-to-end data engineering workflow built around the Instacart Online Grocery Basket Analysis dataset. It combines infrastructure provisioning, orchestration, cloud storage, external tables in BigQuery, and dbt transformations to turn raw CSV files into analytics-ready models.
 
+## Problem Statement
+
+Online grocery teams need a reliable way to understand which product categories drive demand, how often customers reorder, and where shoppers show broad or narrow product preferences. The raw Instacart dataset is delivered as separate CSV files, so it must be ingested, stored, modeled, tested, and surfaced through reporting before it can answer those questions consistently.
+
+This project solves that problem by building a reproducible ELT pipeline that moves raw Instacart data into Google Cloud Storage, exposes it in BigQuery, transforms it into reporting marts with dbt, and presents the final `rpt_*` tables in an interactive dashboard.
+
 ## Contents
 
 - [Core Features](#core-features)
@@ -10,6 +16,7 @@ This project is an end-to-end data engineering workflow built around the Instaca
 - [Transformation Model](#transformation-model)
 - [Project Flow](#project-flow)
 - [Main Outputs](#main-outputs)
+- [Interactive Dashboard](#interactive-dashboard)
 - [Looker Studio](#looker-studio)
 - [Key Metrics](#key-metrics)
 - [Component Responsibilities](#component-responsibilities)
@@ -22,15 +29,16 @@ This project is an end-to-end data engineering workflow built around the Instaca
 
 - Automated dataset ingestion from Kaggle using `kagglehub`
 - Infrastructure provisioning with Terraform for Google Cloud Storage and BigQuery
-- Airflow DAG orchestration for download, upload, and external table creation
+- Airflow DAG orchestration for download, upload, external table creation, and dbt execution
 - Raw data landing in GCS and queryable via BigQuery external tables
 - Layered dbt transformations across staging, intermediate, and marts models
 - Data quality coverage with dbt tests and a custom duplicate-check test
 - Reporting-friendly outputs for products, departments, aisles, and user order behavior
+- Interactive Streamlit dashboard over the final `rpt_*` BigQuery tables
 
 ## Key Components
 
-- [`dags/instacart_dag.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/dags/instacart_dag.py): Airflow orchestration entrypoint that sequences ingestion, infrastructure, upload, and external table creation
+- [`dags/instacart_dag.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/dags/instacart_dag.py): Airflow orchestration entrypoint that sequences ingestion, infrastructure, upload, external table creation, and dbt model execution
 - [`pipelines/download_datasets.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/pipelines/download_datasets.py): downloads the Kaggle Instacart dataset into the local raw landing zone
 - [`pipelines/upload_data_to_gcs.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/pipelines/upload_data_to_gcs.py): copies downloaded raw files from local storage into GCS
 - [`pipelines/create_external_tables.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/pipelines/create_external_tables.py): registers raw CSV files in BigQuery as external tables
@@ -41,6 +49,7 @@ This project is an end-to-end data engineering workflow built around the Instaca
 - [`analytics/models/staging/`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/analytics/models/staging): source cleanup and type-standardization layer
 - [`analytics/models/intermediate/`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/analytics/models/intermediate): reusable business logic and enriched joins
 - [`analytics/models/marts/`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/analytics/models/marts): reporting-ready facts, dimensions, and summary tables
+- [`dashboard/app.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/dashboard/app.py): Streamlit dashboard that queries the dbt `rpt_*` tables from BigQuery
 
 ## Architecture
 
@@ -51,6 +60,7 @@ The architecture follows a straightforward ELT pattern:
 - Transform: dbt builds staging, intermediate, and marts models inside BigQuery
 - Orchestrate: Airflow coordinates the end-to-end workflow
 - Provision: Terraform manages the bucket and warehouse dataset as code
+- Visualize: Streamlit reads the final reporting marts from BigQuery
 
 ```mermaid
 flowchart LR
@@ -69,7 +79,9 @@ flowchart LR
     M --> F
     M --> D
     M --> H
-    L --> N["BI / Reporting / Analysis"]
+    M --> J
+    L --> N["Streamlit Dashboard"]
+    L --> O["BI / Reporting / Analysis"]
 ```
 
 ## Transformation Model
@@ -110,6 +122,7 @@ flowchart TD
 4. [`pipelines/upload_data_to_gcs.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/pipelines/upload_data_to_gcs.py) uploads local files into GCS.
 5. [`pipelines/create_external_tables.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/pipelines/create_external_tables.py) creates external BigQuery tables over the CSV files in the bucket.
 6. dbt models in [`analytics/models/`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/analytics/models) transform the raw tables into reusable marts.
+7. [`dashboard/app.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/dashboard/app.py) reads the final `rpt_*` tables from BigQuery for interactive analysis.
 
 ## Main Outputs
 
@@ -120,6 +133,32 @@ The dbt project currently produces these main analytics models:
 - `rpt_department_summary`: department-level metrics such as orders, users, products, and reorder rate
 - `rpt_aisle_summary`: aisle-level performance summary
 - `rpt_user_order_summary`: user-level ordering and reorder behavior summary
+
+## Interactive Dashboard
+
+The repository includes a Streamlit dashboard for exploring the final reporting marts directly from BigQuery.
+
+Dashboard source:
+
+- [`dashboard/app.py`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/dashboard/app.py)
+- [`dashboard/README.md`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/dashboard/README.md)
+
+The dashboard provides:
+
+- KPI cards for line items, orders, users, departments, aisles, products, reorder rate, and cart position
+- Department ranking charts by selected metric
+- Aisle drill-down with department filters
+- User behavior segmentation by order frequency
+- Cached BigQuery reads to keep local exploration responsive
+
+Run it after the dbt marts have been built:
+
+```bash
+source .env
+uv run streamlit run dashboard/app.py
+```
+
+The dashboard will be available at [http://localhost:8501](http://localhost:8501).
 
 ## Looker Studio
 
@@ -171,6 +210,7 @@ These metrics make it easy to answer questions such as:
 - GCS acts as the raw object storage layer for downloaded CSV files
 - BigQuery external tables provide a queryable raw layer without first loading files into native tables
 - dbt handles transformation logic, testing, and final analytics table generation
+- Streamlit provides a local interactive dashboard over the final reporting tables
 - Docker Compose provides a reproducible local runtime for Airflow and its dependencies
 
 ## Prerequisites
@@ -184,6 +224,7 @@ Before reproducing the project, make sure you have:
 - A GCP project
 - A GCP service account with access to GCS and BigQuery
 - Kaggle API credentials
+- Streamlit, installed through the project dependencies
 
 ## Reproduction Steps
 
@@ -296,30 +337,7 @@ docker compose up --build -d
 
 The Airflow UI will be available at [http://localhost:8080](http://localhost:8080).
 
-### 9. Run the pipeline
-
-In Airflow:
-
-1. Open the DAG `instacart_download_datasets`.
-2. Enable the DAG.
-3. Trigger a run.
-
-The DAG executes four steps in order:
-
-1. Download the dataset from Kaggle
-2. Create or apply GCS and BigQuery infrastructure with Terraform
-3. Upload files from `data/` into GCS
-4. Create BigQuery external tables
-
-### 10. Verify the raw layer
-
-After the DAG succeeds, confirm:
-
-- CSV files exist in [`data/instacart_raw/`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/data/instacart_raw)
-- files were uploaded to your GCS bucket
-- external tables exist in your BigQuery dataset
-
-### 11. Create the dbt source definition
+### 9. Create the dbt source definition
 
 Copy the provided source template:
 
@@ -327,9 +345,36 @@ Copy the provided source template:
 cp analytics/models/src_instacart_raw_template.yml analytics/models/src_instacart_raw.yml
 ```
 
-Update the new file so the source schema matches the BigQuery dataset that contains your raw external tables.
+Update the new file so the source schema matches the BigQuery dataset that contains your raw external tables. Create this file before triggering the Airflow DAG so the dbt task can resolve the source definitions.
 
-### 12. Run dbt models and tests
+### 10. Run the pipeline
+
+In Airflow:
+
+1. Open the DAG `instacart_download_datasets`.
+2. Enable the DAG.
+3. Trigger a run.
+
+The DAG executes five steps in order:
+
+1. Download the dataset from Kaggle
+2. Create or apply GCS and BigQuery infrastructure with Terraform
+3. Upload files from `data/` into GCS
+4. Create BigQuery external tables
+5. Run dbt models in BigQuery
+
+### 11. Verify the raw and mart layers
+
+After the DAG succeeds, confirm:
+
+- CSV files exist in [`data/instacart_raw/`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/data/instacart_raw)
+- files were uploaded to your GCS bucket
+- external tables exist in your BigQuery dataset
+- dbt mart tables exist in your BigQuery dataset, especially `rpt_department_summary`, `rpt_aisle_summary`, and `rpt_user_order_summary`
+
+### 12. Run dbt models and tests manually, if needed
+
+The Airflow DAG runs `dbt run` after creating external tables. You can still run dbt manually for local validation or development:
 
 ```bash
 cd analytics
@@ -343,6 +388,17 @@ This will build:
 - intermediate models for enriched order and product entities
 - marts models for reporting and analysis
 
+### 13. Launch the interactive dashboard
+
+After the `rpt_*` tables exist in BigQuery, start the Streamlit app:
+
+```bash
+source .env
+uv run streamlit run dashboard/app.py
+```
+
+Open [http://localhost:8501](http://localhost:8501) and use the sidebar controls to filter departments, choose ranking metrics, adjust top-N results, and segment user order behavior.
+
 ## dbt Model Structure
 
 - [`analytics/models/staging/`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/analytics/models/staging): cleaned raw-source views
@@ -354,4 +410,5 @@ This will build:
 
 - Airflow uses the custom image defined in [`Dockerfile.airflow`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/Dockerfile.airflow), which installs Terraform and project dependencies.
 - dbt reads credentials and dataset settings from environment variables via [`analytics/profiles.yml`](/Users/artemijskurtenoks/Desktop/Coding/Projects/Instacart-Online-Grocery-Basket-Analysis---Data-Engineering-Project/analytics/profiles.yml).
+- The Streamlit dashboard reads the same `GCP_PROJECT_ID`, `DBT_DATASET_NAME`, and `GOOGLE_APPLICATION_CREDENTIALS` environment variables used by dbt.
 - The project is set up for local development and reproducibility, not production deployment.
